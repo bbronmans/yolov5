@@ -670,6 +670,17 @@ def save_one_box(xyxy, im, file='image.jpg', gain=1.02, pad=10, square=False, BG
     cv2.imwrite(str(increment_path(file, mkdir=True).with_suffix('.jpg')), crop if BGR else crop[..., ::-1])
 
 
+def write_det(xyxy, im, save_dir, class_name, filename='image.jpg', BGR=False):
+    # Save an image twice as {file}, once with the detection visualized (bbox) and once without (clean)
+    file = save_dir / 'clean' / class_name / filename
+    cv2.imwrite(str(increment_path(file, mkdir=True).with_suffix('.jpg')), im if BGR else im[..., ::-1])
+
+    file = save_dir / 'bbox' / class_name / filename
+    c1, c2 = (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]), int(xyxy[3]))
+    cv2.rectangle(im, c1, c2, (256, 0, 0), thickness=3, lineType=cv2.LINE_AA)
+    cv2.imwrite(str(increment_path(file, mkdir=True).with_suffix('.jpg')), im if BGR else im[..., ::-1])
+
+
 def increment_path(path, exist_ok=False, sep='', mkdir=False):
     # Increment file or directory path, i.e. runs/exp --> runs/exp{sep}2, runs/exp{sep}3, ... etc.
     path = Path(path)  # os-agnostic
