@@ -677,7 +677,8 @@ def write_det(xyxy, im, save_dir, class_name, filename='image.jpg', BGR=False):
 
     file = save_dir / 'bbox' / class_name / filename
     c1, c2 = (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]), int(xyxy[3]))
-    cv2.rectangle(im, c1, c2, (256, 0, 0), thickness=3, lineType=cv2.LINE_AA)
+    color = (0, 0, 255) if BGR else (255, 0, 0)  # Always red
+    cv2.rectangle(im, c1, c2, color, thickness=3, lineType=cv2.LINE_AA)
     cv2.imwrite(str(increment_path(file, mkdir=True).with_suffix('.jpg')), im if BGR else im[..., ::-1])
 
 
