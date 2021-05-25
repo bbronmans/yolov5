@@ -282,6 +282,7 @@ class LoadStreams:  # multiple IP or RTSP cameras
             s = eval(s) if s.isnumeric() else s  # i.e. s = '0' local webcam
             cap = cv2.VideoCapture(s, cv2.CAP_DSHOW)
             assert cap.isOpened(), f'Failed to open {s}'
+            cap.set(cv2.CAP_PROP_FPS, 24)
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, 4096)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
             w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
