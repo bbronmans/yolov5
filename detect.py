@@ -118,7 +118,7 @@ def detect(opt):
                         plot_one_box(xyxy, im0, label=label, color=colors(c, True), line_thickness=opt.line_thickness)
                         if opt.save_det_img:
                             filename = f'{p.stem}' + ('' if dataset.mode == 'image' else f'_{frame}') + '.jpg'
-                            write_det(xyxy, imc, save_dir, names[c], filename, BGR=True)
+                            write_det(xyxy, imc, save_dir, filename, BGR=True)
                         if opt.save_crop:
                             save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
 
