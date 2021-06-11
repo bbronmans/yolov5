@@ -1,6 +1,7 @@
 import argparse
 import time
 from pathlib import Path
+from datetime import datetime
 
 import cv2
 import torch
@@ -91,7 +92,8 @@ def detect(opt):
 
             p = Path(p)  # to Path
             save_path = str(save_dir / p.name)  # img.jpg
-            txt_path = str(save_dir / 'labels' / p.stem) + ('' if dataset.mode == 'image' else f'_{frame}')  # img.txt
+            date_string = datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")
+            txt_path = str(save_dir / 'labels' / p.stem) + ('' if dataset.mode == 'image' else f'_{date_string}')
             s += '%gx%g ' % img.shape[2:]  # print string
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             imc = im0.copy() if opt.save_crop or opt.save_det_img else im0  # for opt.save_crop
@@ -117,7 +119,7 @@ def detect(opt):
                         label = None if opt.hide_labels else (names[c] if opt.hide_conf else f'{names[c]} {conf:.2f}')
                         plot_one_box(xyxy, im0, label=label, color=colors(c, True), line_thickness=opt.line_thickness)
                         if opt.save_det_img:
-                            filename = f'{p.stem}' + ('' if dataset.mode == 'image' else f'_{frame}') + '.jpg'
+                            filename = f'{p.stem}' + ('' if dataset.mode == 'image' else f'_{date_string}') + '.jpg'
                             write_det(xyxy, imc, save_dir, filename, BGR=True)
                         if opt.save_crop:
                             save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
