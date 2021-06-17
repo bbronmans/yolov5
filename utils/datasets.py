@@ -1071,8 +1071,8 @@ def verify_image_label(args):
             nf = 1  # label found
             with open(lb_file, 'r') as f:
                 l = [x.split() for x in f.read().strip().splitlines() if len(x)]
-                if l.shape[1] == 6:  # Skip confidence in label
-                    l = l[:, :5]
+                if len(l[0]) == 6:  # Skip confidence in label
+                    l = [det[:5] for det in l]
                 if any([len(x) > 8 for x in l]):  # is segment
                     classes = np.array([x[0] for x in l], dtype=np.float32)
                     segments = [np.array(x[1:], dtype=np.float32).reshape(-1, 2) for x in l]  # (cls, xy1...)
