@@ -39,6 +39,7 @@ def detect(weights='yolov5s.pt',  # model.pt path(s)
            hide_labels=False,  # hide labels
            hide_conf=False,  # hide confidences
            half=False,  # use FP16 half-precision inference
+           max_fps=30,  # for (web)stream
            save_det_img=False  # save only frames from stream with detections
            ):
     save_img = not nosave and not source.endswith('.txt')  # save inference images
@@ -85,7 +86,7 @@ def detect(weights='yolov5s.pt',  # model.pt path(s)
     for path, img, im0s, vid_cap in dataset:
         if webcam:
             skip_frame += 1
-            if skip_frame % (dataset.fps // opt.max_fps) != 0:
+            if skip_frame % (dataset.fps // max_fps) != 0:
                 continue
             skip_frame = 0
         img = torch.from_numpy(img).to(device)
