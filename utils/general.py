@@ -713,7 +713,7 @@ def save_one_box(xyxy, im, file='image.jpg', gain=1.02, pad=10, square=False, BG
     return crop
 
 
-def write_det(xyxy, im, save_dir, filename='image.png', frame=None, BGR=False):
+def write_det(xyxy, im, save_dir, filename='image.png', BGR=False):
     # Save an image twice as {file}, once with the detection visualized (bbox) and once without (images)
     file = save_dir / 'images' / filename
     cv2.imwrite(str(increment_path(file, mkdir=True).with_suffix('.png')), im if BGR else im[..., ::-1])
