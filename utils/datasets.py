@@ -286,7 +286,7 @@ class LoadStreams:  # multiple IP or RTSP cameras
             sources = [sources]
 
         n = len(sources)
-        self.imgs = [None] * n
+        self.imgs, self.fps, self.frames, self.threads = [None] * n, [0] * n, [0] * n, [None] * n
         self.sources = [clean_str(x) for x in sources]  # clean source names for later
         for i, s in enumerate(sources):  # index, source
             # Start thread to read frames from video stream
@@ -303,13 +303,12 @@ class LoadStreams:  # multiple IP or RTSP cameras
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
             w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            self.fps = (cap.get(cv2.CAP_PROP_FPS) % 100) or 30.0  # assume 30 FPS if cap gets 0 FPS
-            self.frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-
+            self.fps[i] = (cap.get(cv2.CAP_PROP_FPS) % 100) or 30.0  # assume 30 FPS if cap gets 0 FPS
+            self.frames[i] = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             _, self.imgs[i] = cap.read()  # guarantee first frame
-            thread = Thread(target=self.update, args=([i, cap]), daemon=True)
-            print(f" success ({f'{self.frames} frames ' if self.frames else ''}{w}x{h} at {self.fps:.2f} FPS).")
-            thread.start()
+            self.threads[i] = Thread(target=self.update, args=([i, cap]), daemon=True)
+            print(f" success ({self.frames[i]} frames {w}x{h} at {self.fps[i]:.2f} FPS)")
+            self.threads[i].start()
         print('')  # newline
 
         # check for common shapes
@@ -337,12 +336,12 @@ class LoadStreams:  # multiple IP or RTSP cameras
 
     def __next__(self):
         self.count += 1
-        img0 = self.imgs.copy()
-        if cv2.waitKey(1) == ord('q'):  # q to quit
+        if not all(x.is_alive() for x in self.threads) or cv2.waitKey(1) == ord('q'):  # q to quit
             cv2.destroyAllWindows()
             raise StopIteration
 
         # Letterbox
+        img0 = self.imgs.copy()
         img = [letterbox(x, self.img_size, auto=self.rect, stride=self.stride)[0] for x in img0]
 
         # Stack
@@ -393,7 +392,8 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                         # f += [p.parent / x.lstrip(os.sep) for x in t]  # local to global path (pathlib)
                 else:
                     raise Exception(f'{prefix}{p} does not exist')
-            self.img_files = sorted([x.replace('/', os.sep) for x in f if x.split('.')[-1].lower() in img_formats])
+            self.img_files = sorted([x.replace('/', os.sep) for x in f
+                                     if 'images' in x and x.split('.')[-1].lower() in img_formats])
             # self.img_files = sorted([x for x in f if x.suffix[1:].lower() in img_formats])  # pathlib
             assert self.img_files, f'{prefix}No images found'
         except Exception as e:
@@ -866,6 +866,8 @@ def verify_image_label(args):
             nf = 1  # label found
             with open(lb_file, 'r') as f:
                 l = [x.split() for x in f.read().strip().splitlines() if len(x)]
+                if len(l[0]) == 6:  # Skip confidence in label
+                    l = [det[:5] for det in l]
                 if any([len(x) > 8 for x in l]):  # is segment
                     classes = np.array([x[0] for x in l], dtype=np.float32)
                     segments = [np.array(x[1:], dtype=np.float32).reshape(-1, 2) for x in l]  # (cls, xy1...)

@@ -62,6 +62,7 @@ def set_logging(rank=-1, verbose=True):
         level=logging.INFO if (verbose and rank in [-1, 0]) else logging.WARN)
 
 
+
 def init_seeds(seed=0):
     # Initialize random number generator (RNG) seeds
     random.seed(seed)
@@ -661,16 +662,16 @@ def save_one_box(xyxy, im, file='image.jpg', gain=1.02, pad=10, square=False, BG
     return crop
 
 
-def write_det(xyxy, im, save_dir, class_name, filename='image.jpg', BGR=False):
-    # Save an image twice as {file}, once with the detection visualized (bbox) and once without (clean)
-    file = save_dir / 'clean' / class_name / filename
-    cv2.imwrite(str(increment_path(file, mkdir=True).with_suffix('.jpg')), im if BGR else im[..., ::-1])
+def write_det(xyxy, im, save_dir, filename='image.png', BGR=False):
+    # Save an image twice as {file}, once with the detection visualized (bbox) and once without (images)
+    file = save_dir / 'images' / filename
+    cv2.imwrite(str(increment_path(file, mkdir=True).with_suffix('.png')), im if BGR else im[..., ::-1])
 
-    file = save_dir / 'bbox' / class_name / filename
+    file = save_dir / 'bbox' / filename
     c1, c2 = (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]), int(xyxy[3]))
     color = (0, 0, 255) if BGR else (255, 0, 0)  # Always red
     cv2.rectangle(im, c1, c2, color, thickness=3, lineType=cv2.LINE_AA)
-    cv2.imwrite(str(increment_path(file, mkdir=True).with_suffix('.jpg')), im if BGR else im[..., ::-1])
+    cv2.imwrite(str(increment_path(file, mkdir=True).with_suffix('.png')), im if BGR else im[..., ::-1])
 
 
 def increment_path(path, exist_ok=False, sep='', mkdir=False):

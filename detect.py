@@ -8,6 +8,7 @@ import argparse
 import sys
 import time
 from pathlib import Path
+from datetime import datetime
 
 import cv2
 import torch
@@ -98,7 +99,7 @@ def run(weights='yolov5s.pt',  # model.pt path(s)
     for path, img, im0s, vid_cap in dataset:
         if webcam:
             skip_frame += 1
-            if skip_frame % (dataset.fps // opt.max_fps) != 0:
+            if skip_frame % (dataset.fps[0] // max_fps) != 0:
                 continue
             skip_frame = 0
         img = torch.from_numpy(img).to(device)
@@ -130,10 +131,11 @@ def run(weights='yolov5s.pt',  # model.pt path(s)
 
             p = Path(p)  # to Path
             save_path = str(save_dir / p.name)  # img.jpg
-            txt_path = str(save_dir / 'labels' / p.stem) + ('' if dataset.mode == 'image' else f'_{frame}')  # img.txt
+            date_string = datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")
+            txt_path = str(save_dir / 'labels' / p.stem) + ('' if dataset.mode == 'image' else f'_{date_string}')
             s += '%gx%g ' % img.shape[2:]  # print string
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
-            imc = im0.copy() if save_crop or opt.save_det_img else im0  # for save_crop
+            imc = im0.copy() if save_crop or save_det_img else im0  # for save_crop
             if len(det):
                 # Rescale boxes from img_size to im0 size
                 det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
@@ -156,7 +158,8 @@ def run(weights='yolov5s.pt',  # model.pt path(s)
                         label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
                         plot_one_box(xyxy, im0, label=label, color=colors(c, True), line_thickness=line_thickness)
                         if save_det_img:
-                            write_det(xyxy, imc, save_dir, names[c], f'{p.stem}.jpg', BGR=True)
+                            filename = f'{p.stem}' + ('' if dataset.mode == 'image' else f'_{date_string}') + '.png'
+                            write_det(xyxy, imc, save_dir, filename, BGR=True)
                         if save_crop:
                             save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
 
@@ -222,9 +225,9 @@ def parse_opt():
     parser.add_argument('--line-thickness', default=3, type=int, help='bounding box thickness (pixels)')
     parser.add_argument('--hide-labels', default=False, action='store_true', help='hide labels')
     parser.add_argument('--hide-conf', default=False, action='store_true', help='hide confidences')
+    parser.add_argument('--half', action='store_true', help='use FP16 half-precision inference')
     parser.add_argument('--max-fps', type=int, default=30, help='maximum number of frames per second')
     parser.add_argument('--save-det-img', default=False, action='store_true', help='save images with detections only')
-    parser.add_argument('--half', action='store_true', help='use FP16 half-precision inference')
     opt = parser.parse_args()
     return opt
 
